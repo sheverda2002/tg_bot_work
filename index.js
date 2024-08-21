@@ -11,6 +11,8 @@ const PORT = process.env.PORT || 3000;
 const profitsChatId = -1002222723133;
 const CuratorSchema = require('./models/curatorSchema')
 
+
+
 const ourCuratorID = 5578275445;
 
 
