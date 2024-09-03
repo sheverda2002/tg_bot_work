@@ -187,12 +187,7 @@ bot.on("message", async (msg) => {
             `<b>┖ EXCHANGER (в разработке)</b>`
         await bot.sendPhoto(chatId, "images/welcome.jpg", {
             caption: text,
-            parse_mode: "HTML",
-            reply_markup: JSON.stringify({
-                inline_keyboard: [
-                    [{text: "Ваша реферальная сылка", callback_data: "our_frieds_link"}],
-                ]
-            })
+            parse_mode: "HTML"
         })
     } else if (msg.text === "💋 ESCORT") {
         const user = await UserSchema.findOne({id_user: msg.from.id});
