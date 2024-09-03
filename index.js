@@ -176,16 +176,23 @@ bot.on("message", async (msg) => {
             `<b>👤 Проценты воркера\n</b>` +
             `<b>┣ Пополнение: 80%</b>\n` +
             `<b>┣ Пополнение ТП: 65%</b>\n` +
-            `<b>┣ Обнал: 60%</b>\n\n` +
+            `<b>┖ Обнал: 60%</b>\n\n` +
+            "<b>🔗 Ссылка для друга (3% с каждого профита)</b>\n" +
+            "┖ <a>https://t.me/InfTeamAppBot?start=984978132</a>\n\n" +
             `<b>📈 Основные направления работы</b>\n` +
             `<b>┣ ESCORT</b>\n` +
             `<b>┣ TRADE (в разработке)</b>\n` +
             `<b>┣ NFT (в разработке)</b>\n` +
             `<b>┣ CASINO (в разработке)</b>\n` +
-            `<b>┣ EXCHANGER (в разработке)</b>`
+            `<b>┖ EXCHANGER (в разработке)</b>`
         await bot.sendPhoto(chatId, "images/welcome.jpg", {
             caption: text,
-            parse_mode: "HTML"
+            parse_mode: "HTML",
+            reply_markup: JSON.stringify({
+                inline_keyboard: [
+                    [{text: "Ваша реферальная сылка", callback_data: "our_frieds_link"}],
+                ]
+            })
         })
     } else if (msg.text === "💋 ESCORT") {
         const user = await UserSchema.findOne({id_user: msg.from.id});
