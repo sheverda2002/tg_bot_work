@@ -469,8 +469,9 @@ bot.on("message", async (msg) => {
         let delete_curator_index = false;
         let user_curator_index = 0;
         const curators = await CuratorSchema.find()
-        let usersItems = curators.forEach(curator => {
-            curator.users.map((user, index) => {
+        let usersItems = [];
+         curators.forEach(curator => {
+            usersItems = curator.users.map((user, index) => {
                 if (user.id_user == userState[chatId].userId) {
                     curator_is_added = true
                     if (user.profits >= 4) {
@@ -512,10 +513,10 @@ bot.on("message", async (msg) => {
             `<b>├ Сервис: ESCORT</b>\n` +
             `<b>└ Воркер: @${user.user_name}</b>`
         console.log(userState[chatId].userId)
-        if (userState[chatId].userId == ourCuratorID) {
+        if (userState[chatId].userId == userState.curator.id_user) {
             await bot.sendMessage(chatId, "Перевод на баланс сделан ✅")
 
-        } else if (userState[chatId].userId != ourCuratorID) {
+        } else if (userState[chatId].userId != userState.curator.id_user) {
             await bot.sendMessage(profitsChatId, profit_text, {parse_mode: "HTML"})
             await bot.sendMessage(chatId, "Перевод на баланс сделан ✅")
         }
