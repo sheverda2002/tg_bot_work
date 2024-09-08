@@ -14,14 +14,6 @@ const CuratorSchema = require('./models/curatorSchema')
 
 
 
-
-
-
-
-const ourCuratorID = 5578275445;
-
-
-
 let userState = {}
 
 let escortAddModelMsgId = {
@@ -83,16 +75,19 @@ bot.onText(/\/start/, async (msg) => {
     await bot.sendMessage(chatId, "⚡", replyKeyboard)
     const curators = await CuratorSchema.find()
     let curator_is_added = false
-    curators[0].users.forEach(user => {
-        if (user.id_user === msg.from.id) {
-            curator_is_added = true
-        }
+    curators.forEach(curator => {
+        curator.users.forEach(user => {
+            if (user.id_user === msg.from.id) {
+                curator_is_added = true
+                userState.curator = curator
+            }
+        })
     })
     let buttons = []
     if (curator_is_added) {
         buttons = [
             [{text: "💲Оформить выплату", callback_data: "make_payment"}],
-            [{text: `Ваш куратор - ${curators[0].name}`, callback_data: "my_curator"}]
+            [{text: `Ваш куратор - ${userState.curator.name}`, callback_data: "my_curator"}]
         ]
     } else if (curator_is_added === false) {
         buttons = [
@@ -107,19 +102,20 @@ bot.onText(/\/start/, async (msg) => {
 
 bot.onText('/curator', async (msg) => {
     const chatId = msg.chat.id;
-    console.log(msg.from.id === ourCuratorID)
-    if (msg.from.id === ourCuratorID) {
-        const curators = await CuratorSchema.find()
-        let usersText = '';
-        if (curators[0].users.length > 0) {
-            curators[0].users.forEach(user => {
-                usersText = usersText + `@${user.user_name} (ID: ${user.id_user}) - ${user.profits}/5 профитов\n`
-            })
-        } else if (curators[0].users.length <= 0) {
-            usersText = "Учеников нету 🚫"
+    const curators = await CuratorSchema.find()
+    curators.forEach(curator => {
+        if (msg.from.id === curator.id_user) {
+            let usersText = '';
+            if (curator.users.length > 0) {
+                curator.users.forEach(user => {
+                    usersText = usersText + `@${user.user_name} (ID: ${user.id_user}) - ${user.profits}/5 профитов\n`
+                })
+            } else if (curator.users.length <= 0) {
+                usersText = "Учеников нету 🚫"
+            }
+            bot.sendMessage(chatId, usersText, {parse_mode: "HTML", reply_markup: JSON.stringify({})})
         }
-        await bot.sendMessage(chatId, usersText, {parse_mode: "HTML", reply_markup: JSON.stringify({})})
-    }
+    })
 
 
 })
@@ -137,16 +133,19 @@ bot.on("message", async (msg) => {
         const user = await UserSchema.findOne({id_user: msg.from.id})
         const curators = await CuratorSchema.find()
         let curator_is_added = false
-        curators[0].users.forEach(user => {
-            if (user.id_user === msg.from.id) {
-                curator_is_added = true
-            }
+        curators.forEach(curator => {
+            curator.users.forEach(user => {
+                if (user.id_user === msg.from.id) {
+                    curator_is_added = true
+                    userState.curator = curator
+                }
+            })
         })
         let buttons = []
         if (curator_is_added) {
             buttons = [
                 [{text: "💲Оформить выплату", callback_data: "make_payment"}],
-                [{text: `Ваш куратор - ${curators[0].name}`, callback_data: "my_curator"}]
+                [{text: `Ваш куратор - ${userState.curator.name}`, callback_data: "my_curator"}]
             ]
         } else if (curator_is_added === false) {
             buttons = [
@@ -470,25 +469,27 @@ bot.on("message", async (msg) => {
         let delete_curator_index = false;
         let user_curator_index = 0;
         const curators = await CuratorSchema.find()
-        let usersItems = curators[0].users.map((user, index) => {
-            if (user.id_user == userState[chatId].userId) {
-                curator_is_added = true
-                if (user.profits >= 4) {
-                    user_curator_index = index;
-                    delete_curator_index = true
-                } else if (user.profits < 5) {
-                    console.log(index)
-                    user.profits = user.profits+1;
-                    return user;
-                } else if (user.profits === 5) {
+        let usersItems = curators.forEach(curator => {
+            curator.users.map((user, index) => {
+                if (user.id_user == userState[chatId].userId) {
+                    curator_is_added = true
+                    if (user.profits >= 4) {
+                        user_curator_index = index;
+                        delete_curator_index = true
+                    } else if (user.profits < 5) {
+                        console.log(index)
+                        user.profits = user.profits+1;
+                        return user;
+                    } else if (user.profits === 5) {
+                    }
                 }
-            }
+            })
         })
         if (delete_curator_index) {
             usersItems.splice(user_curator_index, 1);
         }
         if (curator_is_added) {
-            await CuratorSchema.updateOne({id_user: curators[0].id_user}, {
+            await CuratorSchema.updateOne({id_user: userState.curator.id_user}, {
                 $set: {
                     users: usersItems
                 }
@@ -711,7 +712,7 @@ bot.on("callback_query", async (msg) => {
             })})
     } else if (msg.data.startsWith("thosen_curator_")) {
         const [curatorId] = msg.data.replace('thosen_curator_', '').split('_');
-        const curator = await CuratorSchema.findOne({id_user: curatorId})
+        const curator = await CuratorSchema.findOne({id_user: userState.curator.id_user})
         await bot.deleteMessage(chatId, msg.message.message_id)
         await bot.sendMessage(chatId, `${curator.name} научит вас работать по ${curator.work} направлению. Куратор будет привязан на ваши первые 5 профитом, с каждого профита он будет забирать ${curator.interest}%`, {
             parse_mode: "HTML",
@@ -727,7 +728,7 @@ bot.on("callback_query", async (msg) => {
            const [curatorId] = msg.data.replace('add_curator_to_me_', '').split('_');
            await bot.deleteMessage(chatId, msg.message.message_id)
            let curator_is_added = false
-           const curator = await CuratorSchema.findOne({id_user: curatorId})
+           const curator = await CuratorSchema.findOne({id_user: userState.curator.id_user})
            curator.users.forEach(user => {
                if (user.id_user === msg.from.id) {
                    curator_is_added = true
@@ -756,14 +757,16 @@ bot.on("callback_query", async (msg) => {
 
     } else if (msg.data === "my_curator"){
         const curators = await CuratorSchema.find()
-        curators[0].users.forEach(user => {
-            if (user.id_user === msg.from.id) {
-                bot.sendMessage(chatId, `Куратор ${curators[0].name} будет отвязан после 5 профитов. <b>Ваши профиты - ${user.profits}</b>`, {parse_mode: "HTML", reply_markup: JSON.stringify({
-                        inline_keyboard: [
-                            [{text: "💬 Написать куратору", url: `https://t.me/${curators[0].user_name}`}]
-                        ]
-                    })})
-            }
+        curators.forEach(curator => {
+            curator.users.forEach(user => {
+                if (user.id_user === msg.from.id) {
+                    bot.sendMessage(chatId, `Куратор ${curator.name} будет отвязан после 5 профитов. <b>Ваши профиты - ${user.profits}</b>`, {parse_mode: "HTML", reply_markup: JSON.stringify({
+                            inline_keyboard: [
+                                [{text: "💬 Написать куратору", url: `https://t.me/${userState.curator.user_name}`}]
+                            ]
+                        })})
+                }
+            })
         })
     }
 
