@@ -468,33 +468,40 @@ bot.on("message", async (msg) => {
         let curator_is_added = false;
         let delete_curator_index = false;
         let user_curator_index = 0;
-        const curators = await CuratorSchema.find()
-        let usersItems = [];
-         curators.forEach(curator => {
-            usersItems = curator.users.map((user, index) => {
+        const curators= await CuratorSchema.find()
+        curators.forEach(curator => {
+            curator.users.forEach(user => {
                 if (user.id_user == userState[chatId].userId) {
                     curator_is_added = true
-                    if (user.profits >= 4) {
-                        user_curator_index = index;
-                        delete_curator_index = true
-                    } else if (user.profits < 5) {
-                        console.log(index)
-                        user.profits = user.profits+1;
-                        return user;
-                    } else if (user.profits === 5) {
-                    }
+                    userState.curator = curator
                 }
             })
         })
-        if (delete_curator_index) {
-            usersItems.splice(user_curator_index, 1);
-        }
+        console.log("fegrgergerg",curator_is_added)
         if (curator_is_added) {
-            await CuratorSchema.updateOne({id_user: userState.curator.id_user}, {
-                $set: {
-                    users: usersItems
+            let usersItems = userState.curator.users.map((user, index) => {
+                if (user.profits >= 4) {
+                    user_curator_index = index;
+                    delete_curator_index = true
+                } else if (user.profits < 5) {
+                    console.log(index)
+                    user.profits = user.profits+1;
+                    return user;
+                } else if (user.profits === 5) {
+
                 }
             })
+            console.log(usersItems)
+            if (delete_curator_index) {
+                usersItems.splice(user_curator_index, 1);
+            }
+            if (curator_is_added) {
+                await CuratorSchema.updateOne({id_user: userState.curator.id_user}, {
+                    $set: {
+                        users: usersItems
+                    }
+                })
+            }
         }
         const text = `<b>💰Поздравляю с успешным профитом!</b>\n\n` +
             `Сума профита: <b>${msg.text}₽</b>\n` +
@@ -513,16 +520,8 @@ bot.on("message", async (msg) => {
             `<b>├ Сервис: ESCORT</b>\n` +
             `<b>└ Воркер: @${user.user_name}</b>`
         console.log(userState[chatId].userId)
-        if (userState[chatId].userId == userState.curator.id_user) {
-            await bot.sendMessage(chatId, "Перевод на баланс сделан ✅")
-
-        } else if (userState[chatId].userId != userState.curator.id_user) {
-            await bot.sendMessage(profitsChatId, profit_text, {parse_mode: "HTML"})
-            await bot.sendMessage(chatId, "Перевод на баланс сделан ✅")
-        }
-
-
-
+        await bot.sendMessage(chatId, "Перевод на баланс сделан ✅")
+        await bot.sendMessage(profitsChatId, profit_text, {parse_mode: "HTML"})
     }
 })
 
@@ -713,9 +712,9 @@ bot.on("callback_query", async (msg) => {
             })})
     } else if (msg.data.startsWith("thosen_curator_")) {
         const [curatorId] = msg.data.replace('thosen_curator_', '').split('_');
-        const curator = await CuratorSchema.findOne({id_user: userState.curator.id_user})
+        const curator = await CuratorSchema.findOne({id_user: curatorId})
         await bot.deleteMessage(chatId, msg.message.message_id)
-        await bot.sendMessage(chatId, `${curator.name} научит вас работать по ${curator.work} направлению. Куратор будет привязан на ваши первые 5 профитом, с каждого профита он будет забирать ${curator.interest}%`, {
+        await bot.sendMessage(chatId, `${curator.name} научит вас работать по ${curator.work} направлению. Куратор будет    привязан на ваши первые 5 профитом, с каждого профита он будет забирать ${curator.interest}%`, {
             parse_mode: "HTML",
             reply_markup: JSON.stringify({
                 inline_keyboard: [
@@ -727,9 +726,10 @@ bot.on("callback_query", async (msg) => {
     } else if (msg.data.startsWith("add_curator_to_me_")) {
        try {
            const [curatorId] = msg.data.replace('add_curator_to_me_', '').split('_');
+           console.log(curatorId)
            await bot.deleteMessage(chatId, msg.message.message_id)
            let curator_is_added = false
-           const curator = await CuratorSchema.findOne({id_user: userState.curator.id_user})
+           const curator = await CuratorSchema.findOne({id_user: curatorId})
            curator.users.forEach(user => {
                if (user.id_user === msg.from.id) {
                    curator_is_added = true
