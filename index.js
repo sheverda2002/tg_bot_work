@@ -529,6 +529,10 @@ bot.on("message", async (msg) => {
 
 
 
+
+
+
+
 bot.on("callback_query", async (msg) => {
     const chatId = msg.message.chat.id;
     const callbackData = msg.data;
