@@ -449,6 +449,7 @@ bot.on("message", async (msg) => {
         })
         await bot.sendMessage(chatId, "Установлено новое значение ✅")
     } else if (userState[chatId]?.step === "change_current_model_photo") {
+        console.log('11111')
         const user = await UserSchema.findOne({id_user: msg.from.id});
         user.escort_model[userState[chatId].model_index].photos = msg.text;
         await UserSchema.updateOne({id_user: msg.from.id}, {
