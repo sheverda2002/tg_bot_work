@@ -67,7 +67,7 @@ bot.onText(/\/start/, async (msg) => {
                 [{text: "О проекте 🧑‍💻"}]
             ],
             resize_keyboard: true, // Изменить размер клавиатуры в зависимости от количества кнопок
-            one_time_keyboard: true // Скрыть клавиатуру после нажатия кнопки
+            one_time_keyboard: false // Скрыть клавиатуру после нажатия кнопки
         }
     };
     let profile_text  = `<b>⚡️ Профиль @${user.user_name}</b>\n` +
@@ -176,7 +176,6 @@ bot.on("message", async (msg) => {
         //         ]
         //     })
         // })
-
         await bot.sendMessage(chatId, profile_text, {parse_mode: "HTML", reply_markup: JSON.stringify({
                 inline_keyboard: buttons
             })});
