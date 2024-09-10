@@ -179,6 +179,8 @@ bot.on("message", async (msg) => {
         await bot.sendMessage(chatId, profile_text, {parse_mode: "HTML", reply_markup: JSON.stringify({
                 inline_keyboard: buttons
             })});
+
+
     } else if (msg.text === "О проекте 🧑‍💻") {
         const text = "<b>🌐 Информация INFINITY TEAM</b>\n\n" +
             `<b>👤 Проценты воркера\n</b>` +
