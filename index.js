@@ -745,9 +745,6 @@ bot.on("callback_query", async (msg) => {
         })
     } else if (msg.data.startsWith("add_curator_to_me_")) {
 
-
-
-
        try {
            const [curatorId] = msg.data.replace('add_curator_to_me_', '').split('_');
            console.log(curatorId)
